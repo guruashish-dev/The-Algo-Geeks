@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI First Aid Assistant</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f3f3f3; text-align: center; }
+        .chat-container { width: 400px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 10px; }
+        .chat-box { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fff; border-radius: 5px; display: flex; flex-direction: column; }
+        .message { padding: 8px; margin: 5px; border-radius: 5px; max-width: 80%; word-wrap: break-word; }
+        .user { background: #007bff; color: white; text-align: right; align-self: flex-end; }
+        .bot { background: #e0e0e0; color: black; text-align: left; align-self: flex-start; }
+        .loading { font-style: italic; color: gray; }
+        .input-box { display: flex; margin-top: 10px; }
+        .input-box input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .input-box button { padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; margin-left: 5px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>Lifeline AI Chatbot</h2>
+        <div class="chat-box" id="chat-box">
+            <div class="message bot">Hello! How can I assist you with first aid today?</div>
+        </div>
+        <div class="input-box">
+            <input type="text" id="user-input" placeholder="Type your first aid query..." onkeydown="handleKey(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value.trim();
+            if (userInput === "") return;
+
+            const chatBox = document.getElementById("chat-box");
+
+            // Display user message
+            const userMessage = document.createElement("div");
+            userMessage.classList.add("message", "user");
+            userMessage.textContent = userInput;
+            chatBox.appendChild(userMessage);
+            document.getElementById("user-input").value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Display loading message
+            const loadingMessage = document.createElement("div");
+            loadingMessage.classList.add("message", "bot", "loading");
+            loadingMessage.textContent = "Thinking...";
+            chatBox.appendChild(loadingMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userInput })
+                });
+
+                const data = await response.json();
+                chatBox.removeChild(loadingMessage);
+
+                const botMessage = document.createElement("div");
+                botMessage.classList.add("message", "bot");
+                botMessage.textContent = data.response;
+                chatBox.appendChild(botMessage);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+            } catch (error) {
+                chatBox.removeChild(loadingMessage);
+                const errorMessage = document.createElement("div");
+                errorMessage.classList.add("message", "bot");
+                errorMessage.textContent = "Sorry, something went wrong.";
+                chatBox.appendChild(errorMessage);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                console.error("Error:", error);
+            }
+        }
+
+        function handleKey(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
